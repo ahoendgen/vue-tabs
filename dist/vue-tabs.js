@@ -9,6 +9,57 @@
 	(factory((global.vueTabs = {})));
 }(this, (function (exports) { 'use strict';
 
+var nestRE = /^(attrs|props|on|nativeOn|class|style|hook)$/;
+
+var babelHelperVueJsxMergeProps = function mergeJSXProps(objs) {
+  return objs.reduce(function (a, b) {
+    var aa, bb, key, nestedKey, temp;
+    for (key in b) {
+      aa = a[key];
+      bb = b[key];
+      if (aa && nestRE.test(key)) {
+        // normalize class
+        if (key === 'class') {
+          if (typeof aa === 'string') {
+            temp = aa;
+            a[key] = aa = {};
+            aa[temp] = true;
+          }
+          if (typeof bb === 'string') {
+            temp = bb;
+            b[key] = bb = {};
+            bb[temp] = true;
+          }
+        }
+        if (key === 'on' || key === 'nativeOn' || key === 'hook') {
+          // merge functions
+          for (nestedKey in bb) {
+            aa[nestedKey] = mergeFn(aa[nestedKey], bb[nestedKey]);
+          }
+        } else if (Array.isArray(aa)) {
+          a[key] = aa.concat(bb);
+        } else if (Array.isArray(bb)) {
+          a[key] = [aa].concat(bb);
+        } else {
+          for (nestedKey in bb) {
+            aa[nestedKey] = bb[nestedKey];
+          }
+        }
+      } else {
+        a[key] = b[key];
+      }
+    }
+    return a;
+  }, {});
+};
+
+function mergeFn(a, b) {
+  return function () {
+    a.apply(this, arguments);
+    b.apply(this, arguments);
+  };
+}
+
 var VueTabs = {
     name: 'vue-tabs',
     props: {
@@ -183,27 +234,48 @@ var VueTabs = {
                 var active = _this.activeTabIndex === index;
                 return h(
                     'li',
-                    {
+                    babelHelperVueJsxMergeProps([{
                         attrs: { name: 'tab',
                             role: 'presentation' },
-                        on: {
-                            'click': function click() {
-                                return !tab.disabled && _this.navigateToTab(index, route);
-                            }
-                        },
 
                         'class': ['tab', { active: active }, { disabled: tab.disabled }],
-                        key: title },
+                        key: title }, {
+                        on: {
+                            'click': function click($event) {
+                                for (var _len = arguments.length, attrs = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                                    attrs[_key - 1] = arguments[_key];
+                                }
+
+                                (function () {
+                                    return !tab.disabled && _this.navigateToTab(index, route);
+                                }).apply(undefined, [$event].concat(attrs));
+                            }
+                        }
+                    }]),
                     [_this.textPosition === 'top' && _this.renderTabTitle(index, _this.textPosition), h(
                         'a',
-                        {
+                        babelHelperVueJsxMergeProps([{
                             attrs: { href: '#',
 
                                 'aria-selected': active,
                                 'aria-controls': '#' + id,
                                 role: 'tab' },
+
                             style: active ? _this.activeTabStyle : _this.tabStyles(tab),
-                            'class': [{ 'active_tab': active }, 'tabs__link'] },
+                            'class': [{ 'active_tab': active }, 'tabs__link'] }, {
+                            on: {
+                                'click': function click($event) {
+                                    for (var _len2 = arguments.length, attrs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                                        attrs[_key2 - 1] = arguments[_key2];
+                                    }
+
+                                    (function (e) {
+                                        e.preventDefault();
+                                        return false;
+                                    }).apply(undefined, [$event].concat(attrs));
+                                }
+                            }
+                        }]),
                         [_this.textPosition !== 'center' && !tab.$slots.title && _this.renderIcon(index), _this.textPosition === 'center' && _this.renderTabTitle(index, _this.textPosition)]
                     ), _this.textPosition === 'bottom' && _this.renderTabTitle(index, _this.textPosition)]
                 );

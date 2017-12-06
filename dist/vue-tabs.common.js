@@ -7,6 +7,10 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var _mergeJSXProps = _interopDefault(require('babel-helper-vue-jsx-merge-props'));
+
 var VueTabs = {
     name: 'vue-tabs',
     props: {
@@ -181,27 +185,48 @@ var VueTabs = {
                 var active = _this.activeTabIndex === index;
                 return h(
                     'li',
-                    {
+                    _mergeJSXProps([{
                         attrs: { name: 'tab',
                             role: 'presentation' },
-                        on: {
-                            'click': function click() {
-                                return !tab.disabled && _this.navigateToTab(index, route);
-                            }
-                        },
 
                         'class': ['tab', { active: active }, { disabled: tab.disabled }],
-                        key: title },
+                        key: title }, {
+                        on: {
+                            'click': function click($event) {
+                                for (var _len = arguments.length, attrs = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                                    attrs[_key - 1] = arguments[_key];
+                                }
+
+                                (function () {
+                                    return !tab.disabled && _this.navigateToTab(index, route);
+                                }).apply(undefined, [$event].concat(attrs));
+                            }
+                        }
+                    }]),
                     [_this.textPosition === 'top' && _this.renderTabTitle(index, _this.textPosition), h(
                         'a',
-                        {
+                        _mergeJSXProps([{
                             attrs: { href: '#',
 
                                 'aria-selected': active,
                                 'aria-controls': '#' + id,
                                 role: 'tab' },
+
                             style: active ? _this.activeTabStyle : _this.tabStyles(tab),
-                            'class': [{ 'active_tab': active }, 'tabs__link'] },
+                            'class': [{ 'active_tab': active }, 'tabs__link'] }, {
+                            on: {
+                                'click': function click($event) {
+                                    for (var _len2 = arguments.length, attrs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                                        attrs[_key2 - 1] = arguments[_key2];
+                                    }
+
+                                    (function (e) {
+                                        e.preventDefault();
+                                        return false;
+                                    }).apply(undefined, [$event].concat(attrs));
+                                }
+                            }
+                        }]),
                         [_this.textPosition !== 'center' && !tab.$slots.title && _this.renderIcon(index), _this.textPosition === 'center' && _this.renderTabTitle(index, _this.textPosition)]
                     ), _this.textPosition === 'bottom' && _this.renderTabTitle(index, _this.textPosition)]
                 );
